@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Searchbar from '../components/Searchbar'
 import { useDispatch, useSelector } from 'react-redux'
 import Tabs from '../components/Tabs'
@@ -8,22 +8,28 @@ import { clearToken, setToken } from '../feature/auth/authSlice'
 import { setQuery } from '../feature/searchSlice'
 import { CgProfile } from "react-icons/cg";
 import { resetAllApiStates } from '../app/store'
+import { useGetCurrentUserQuery } from '../feature/user/userApi'
+
 
 const UserDashboard = () => {
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const { query } = useSelector((store) => store.search)
     const { token } = useSelector((store) => store.auth)
+    const [showDropdown, setShowDropdown] = useState(false);
+    
 
-    // 1️⃣ Check login token on dashboard load
+
+     const { data: user } = useGetCurrentUserQuery();
+
     useEffect(() => {
-        // Read token from Redux first, fallback to localStorage
+  
         const savedToken = token || localStorage.getItem("access_token")
         if (!savedToken) {
-            // If no token, redirect to login
+    
             navigate("/")
         } else {
-            // Save token in Redux if it's in localStorage
+
             if (!token) dispatch(setToken(savedToken))
         }
     }, [token, dispatch, navigate])
@@ -31,11 +37,11 @@ const UserDashboard = () => {
     const handleLogout = () => {
         dispatch(clearToken())
         resetAllApiStates()
-        localStorage.removeItem("access_token") // also clear localStorage
+        localStorage.removeItem("access_token") 
         navigate("/")
     }
 
-    // Quick search suggestions
+
     const quickSearches = [
         { emoji: "🎨", label: "Art & Design", query: "modern art" },
         { emoji: "🏠", label: "Home Decor", query: "interior design" },
@@ -56,52 +62,148 @@ const UserDashboard = () => {
 
     return (
         <div className='bg-white min-h-screen'>
-            {/* Navbar */}
-            <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-red-100 shadow-sm">
-                <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
-                    {/* LOGO */}
-                    <div
-                        onClick={() => navigate("/user-dashboard")}
-                        className="cursor-pointer flex items-center gap-2 group"
-                    >
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#e60023] to-[#ff4458] flex items-center justify-center text-white font-bold shadow-lg group-hover:shadow-xl transition-all">
-                            P
+      
+              <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-lg border-b-2 border-red-100 shadow-sm">
+      <div className="max-w-7xl mx-auto px-6 py-3">
+        <div className="flex items-center justify-between gap-6">
+
+          <div
+            onClick={() => {
+                navigate("/user-dashboard")
+                window.location.reload()
+            }
+                
+            }
+            className="cursor-pointer flex items-center gap-2.5 group shrink-0"
+          >
+            <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#e60023] to-[#ff4458] flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
+              P
+            </div>
+            <h1 className="text-[#e60023] font-extrabold text-xl tracking-tight group-hover:scale-105 transition-transform hidden sm:block">
+              Pixora
+            </h1>
+          </div>
+
+       
+          <div className="flex-1 max-w-2xl hidden md:block">
+            <Searchbar />
+          </div>
+
+      
+          <div className="flex items-center gap-2 shrink-0">
+
+           
+
+           
+
+            {/* Profile Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border-2 border-red-100 hover:border-[#e60023] hover:bg-red-50 transition-all group"
+              >
+                {/* Avatar */}
+                <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#e60023] to-[#ff4458] flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                  {user?.name?.charAt(0).toUpperCase() || "U"}
+                </div>
+                {/* Name */}
+                <span className="hidden md:block text-sm font-semibold text-[#333] group-hover:text-[#e60023] transition-colors max-w-25 truncate">
+                  {user?.name?.split(" ")[0] || "User"}
+                </span>
+                {/* Arrow */}
+                <span className={`text-[#e60023] text-xs transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`}>
+                  ▼
+                </span>
+              </button>
+
+              {/* Dropdown Menu */}
+              {showDropdown && (
+                <>
+                  {/* Backdrop */}
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowDropdown(false)}
+                  />
+
+                  {/* Menu */}
+                  <div className="absolute right-0 top-14 w-64 bg-white rounded-2xl shadow-2xl border-2 border-red-100 z-20 overflow-hidden animate-fadeIn">
+
+                    {/* User Info Header */}
+                    <div className="px-5 py-4 bg-linear-to-br from-red-50 to-white border-b border-red-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#e60023] to-[#ff4458] flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                          {user?.name?.charAt(0).toUpperCase() || "U"}
                         </div>
-                        <h1 className="text-[#e60023] font-bold text-xl group-hover:scale-105 transition-transform">
-                            Pixora
-                        </h1>
+                        <div className="min-w-0">
+                          <p className="font-bold text-[#111] truncate">{user?.name || "User"}</p>
+                          <p className="text-xs text-[#999] truncate">{user?.email || ""}</p>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* SEARCH */}
-                    <div className="flex-1 max-w-2xl hidden md:block">
-                        <Searchbar />
+                    {/* Menu Items */}
+                    <div className="p-2">
+                      <button
+                        onClick={() => { navigate("/profile"); setShowDropdown(false); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#333] hover:bg-red-50 hover:text-[#e60023] transition-all text-sm font-medium group"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-red-50 group-hover:bg-white flex items-center justify-center transition-colors">
+                          <CgProfile size={18} className="text-[#e60023]" />
+                        </div>
+                        <span>View Profile</span>
+                      </button>
+
+                      <button
+                        onClick={() => { navigate("/collection"); setShowDropdown(false); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#333] hover:bg-red-50 hover:text-[#e60023] transition-all text-sm font-medium group"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-red-50 group-hover:bg-white flex items-center justify-center transition-colors">
+                          <span className="text-base">📁</span>
+                        </div>
+                        <span>My Collections</span>
+                      </button>
+
+                      <button
+                        onClick={() => { 
+                            navigate("/user-dashboard"); 
+                            setShowDropdown(false);
+                            window.location.reload()
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#333] hover:bg-red-50 hover:text-[#e60023] transition-all text-sm font-medium group"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-red-50 group-hover:bg-white flex items-center justify-center transition-colors">
+                          <span className="text-base">🔍</span>
+                        </div>
+                        <span>Explore</span>
+                      </button>
+
+                      <div className="border-t border-red-100 my-2"></div>
+
+                      <button
+                        onClick={() => { handleLogout(); setShowDropdown(false); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#e60023] hover:bg-red-50 transition-all text-sm font-semibold group"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-red-50 group-hover:bg-white flex items-center justify-center transition-colors">
+                          <span className="text-base">🚪</span>
+                        </div>
+                        <span>Logout</span>
+                      </button>
                     </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
 
-                    {/* ACTIONS */}
-                    <div className="flex items-center gap-3">
-                        <button onClick={()=> navigate("/profile")}><CgProfile className='text-[#e60023]' size={32}/></button>
-                        <button
-                            onClick={() => navigate("/collection")}
-                            className="flex items-center gap-2 bg-[#e60023] hover:bg-[#d01f1f] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all shadow-md hover:shadow-lg"
-                        >
-                            📁 Collections
-                        </button>
-                        <button
-                            onClick={handleLogout}
-                            className="px-5 py-2.5 rounded-full border border-red-200 font-semibold text-[#e60023] hover:bg-red-50 transition text-sm"
-                        >
-                            Logout
-                        </button>
-                    </div>
-                </div>
+        {/* SEARCH - Mobile */}
+        <div className="md:hidden mt-3 pb-1">
+          <Searchbar />
+        </div>
+      </div>
+    </nav>
 
-                {/* MOBILE SEARCH */}
-                <div className="px-4 pb-3 md:hidden">
-                    <Searchbar />
-                </div>
-            </nav>
-
-            {/* Main Content */}
+       
             <section className='max-w-7xl mx-auto px-6 py-8'>
                 {query !== "" ? (
                     <div>
@@ -131,7 +233,7 @@ const UserDashboard = () => {
                             </p>
                         </div>
 
-                        {/* Quick Search Buttons */}
+                    
                         <div className='mb-16'>
                             <h3 className='text-lg font-semibold text-[#111] mb-6'>Popular searches</h3>
                             <div className='flex flex-wrap justify-center gap-3 max-w-4xl mx-auto'>
@@ -150,7 +252,6 @@ const UserDashboard = () => {
                             </div>
                         </div>
 
-                        {/* Trending Section */}
                         <div className='mb-12'>
                             <div className='flex items-center justify-center gap-2 mb-6'>
                                 <span className='text-2xl'>🔥</span>
@@ -168,7 +269,7 @@ const UserDashboard = () => {
                                             alt={topic.title}
                                             className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
                                         />
-                                        <div className='absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent'></div>
+                                        <div className='absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent'></div>
                                         <div className='absolute bottom-0 left-0 right-0 p-4'>
                                             <h4 className='text-white font-semibold text-sm'>{topic.title}</h4>
                                         </div>
