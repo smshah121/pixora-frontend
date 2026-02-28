@@ -17,7 +17,7 @@ const Signup = () => {
   const [signup, { isLoading, error }] = useSignupMutation();
 
   const handleGoogleSignup = () => {
-    window.location.href = "http://localhost:3000/auth/google";
+    window.location.href = "https://pixora-backend-35ca1a975cb9.herokuapp.com/auth/google";
   };
 
   const handleSubmit = async (e) => {
